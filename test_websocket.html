@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+</head>
+<body>
+    <h1>WebSocket Test</h1>
+    <div id="status">Connecting...</div>
+    <div id="messages"></div>
+
+    <script>
+        // Get token from localStorage (assuming it's stored there)
+        const authData = localStorage.getItem('auth-storage');
+        let token = '';
+        
+        if (authData) {
+            try {
+                const parsed = JSON.parse(authData);
+                token = parsed.state?.token || '';
+            } catch (e) {
+                console.error('Error parsing auth data:', e);
+            }
+        }
+
+        if (!token) {
+            document.getElementById('status').textContent = 'No token found. Please login first.';
+        } else {
+            const ws = new WebSocket(`ws://localhost:8080/api/ws?token=${token}`);
+            
+            ws.onopen = function() {
+                document.getElementById('status').textContent = 'Connected!';
+                console.log('WebSocket connected');
+            };
+            
+            ws.onerror = function(error) {
+                document.getElementById('status').textContent = 'Connection failed: ' + error;
+                console.error('WebSocket error:', error);
+            };
+            
+            ws.onclose = function() {
+                document.getElementById('status').textContent = 'Disconnected';
+                console.log('WebSocket disconnected');
+            };
+            
+            ws.onmessage = function(event) {
+                const messages = document.getElementById('messages');
+                messages.innerHTML += '<div>' + event.data + '</div>';
+                console.log('Received:', event.data);
+            };
+        }
+    </script>
+</body>
+</html> 
